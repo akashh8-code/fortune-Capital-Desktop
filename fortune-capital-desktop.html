@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fortune Capital — Gold Loan Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0b0b0c;--bg2:#111113;--bg3:#18181b;--bg4:#222226;--bg5:#2a2a2f;
+  --gold:#D4A017;--gold2:#f0b429;--gold3:#ffd166;
+  --red:#8B1A1A;--red2:#c0392b;
+  --green:#22c55e;--green2:#16a34a;
+  --blue:#3b82f6;
+  --text:#f4f4f5;--text2:#a1a1aa;--text3:#52525b;
+  --border:#27272a;--border2:#3f3f46;
+  --r:10px;--r2:7px;
+  --panel-w:calc((100vw - 56px) / 4);
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;}
+
+/* ── LAYOUT ── */
+.shell{display:grid;grid-template-rows:52px 1fr;height:100vh;overflow:hidden;}
+.topbar{
+  display:flex;align-items:center;gap:12px;padding:0 20px;
+  background:rgba(11,11,12,0.98);border-bottom:1px solid var(--border);
+  position:relative;z-index:10;
+}
+.logo-box{
+  width:32px;height:32px;background:var(--red);border-radius:7px;
+  display:flex;align-items:center;justify-content:center;font-size:15px;
+  border:1px solid rgba(255,255,255,.08);flex-shrink:0;
+}
+.brand{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;color:var(--gold2);}
+.brand-tag{font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-top:-2px;}
+.rate-ticker{
+  display:flex;gap:20px;margin-left:auto;
+  background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+  padding:6px 14px;
+}
+.ticker-item{display:flex;flex-direction:column;align-items:center;}
+.ticker-lbl{font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;}
+.ticker-val{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--gold2);}
+.rate-status{font-size:10px;color:var(--text3);margin-left:8px;align-self:center;}
+.refresh-btn{
+  padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;
+  background:rgba(212,160,23,.1);border:1px solid rgba(212,160,23,.3);color:var(--gold2);
+  cursor:pointer;margin-left:8px;white-space:nowrap;
+}
+.refresh-btn:hover{background:rgba(212,160,23,.2);}
+
+/* ── PANELS ── */
+.panels{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:0;
+  height:calc(100vh - 52px);
+  overflow:hidden;
+}
+.panel{
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  height:100%;overflow:hidden;
+}
+.panel:last-child{border-right:none;}
+.panel-head{
+  padding:14px 16px 10px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.panel-title{
+  font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  display:flex;align-items:center;gap:7px;margin-bottom:2px;
+}
+.panel-title span{
+  display:inline-block;width:6px;height:6px;border-radius:50%;flex-shrink:0;
+}
+.pt-gold span{background:var(--gold2);}
+.pt-blue span{background:var(--blue);}
+.pt-green span{background:var(--green);}
+.pt-red span{background:#f87171;}
+.panel-sub{font-size:10px;color:var(--text3);}
+.panel-body{flex:1;overflow-y:auto;padding:12px 16px;scrollbar-width:thin;scrollbar-color:var(--border2) transparent;}
+
+/* ── HERO VALUE ── */
+.hero-val{
+  background:linear-gradient(135deg,#1a0f04,#1e1508);
+  border:1px solid rgba(212,160,23,.25);border-radius:var(--r);
+  padding:12px 14px;margin-bottom:10px;
+}
+.hero-label{font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px;}
+.hero-num{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--gold2);line-height:1;letter-spacing:1px;}
+.hero-sub{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-top:2px;}
+.yield-row{display:flex;align-items:center;gap:10px;margin-top:8px;}
+.yield-bar{flex:1;height:5px;background:var(--bg4);border-radius:3px;overflow:hidden;}
+.yield-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:3px;transition:width .4s;}
+.yield-pct{font-size:12px;font-weight:700;color:var(--gold2);font-family:'DM Mono',monospace;white-space:nowrap;}
+
+/* ── INPUT ROW ── */
+.irow{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);}
+.irow:last-child{border-bottom:none;}
+.irow-lbl{font-size:12px;font-weight:500;color:var(--text2);}
+.irow-sub{font-size:9px;color:var(--text3);}
+.irow-ctrl{display:flex;align-items:center;gap:4px;}
+.cbtn{
+  width:24px;height:24px;border-radius:5px;background:var(--bg4);border:1px solid var(--border2);
+  color:var(--text2);font-size:14px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;user-select:none;transition:background .1s;line-height:1;
+}
+.cbtn:hover{background:var(--bg5);}
+.cinp{
+  width:80px;height:28px;background:var(--bg3);border:1.5px solid var(--gold);
+  border-radius:5px;color:var(--text);font-size:12px;font-weight:500;
+  text-align:center;font-family:'DM Mono',monospace;outline:none;
+}
+.cinp:focus{border-color:var(--gold2);}
+.cunit{font-size:11px;color:var(--text3);min-width:14px;}
+
+/* ── CARDS ── */
+.card{
+  background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);
+  padding:11px 13px;margin-bottom:8px;
+}
+.card:last-child{margin-bottom:0;}
+.card-label{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;}
+
+/* ── METRICS GRID ── */
+.metrics2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;}
+.metric{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:9px 10px;}
+.metric-lbl{font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+.metric-val{font-size:17px;font-weight:700;color:var(--gold2);font-family:'DM Mono',monospace;line-height:1;}
+.metric-sub{font-size:9px;color:var(--text3);margin-top:2px;font-family:'DM Mono',monospace;}
+
+/* ── BARS ── */
+.bar-row{margin-bottom:7px;}
+.bar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;}
+.bar-name{font-size:11px;color:var(--text2);}
+.bar-val{font-size:11px;font-weight:600;color:var(--text);font-family:'DM Mono',monospace;}
+.bar-badge{font-size:9px;font-weight:700;padding:1px 6px;border-radius:20px;margin-left:4px;}
+.bg-gold{background:rgba(212,160,23,.2);color:var(--gold2);}
+.bg-green{background:rgba(34,197,94,.15);color:var(--green);}
+.bg-red{background:rgba(248,113,113,.15);color:#f87171;}
+.track{height:4px;background:var(--bg4);border-radius:2px;overflow:hidden;}
+.fill{height:100%;border-radius:2px;transition:width .4s;}
+.f-gold{background:var(--gold2);}
+.f-green{background:var(--green);}
+.f-red{background:#f87171;}
+
+/* ── COMPARE GRID ── */
+.cmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;}
+.cmp-card{border-radius:var(--r2);padding:10px;border:1px solid;}
+.cmp-18{background:rgba(22,163,74,.08);border-color:rgba(34,197,94,.3);}
+.cmp-24{background:rgba(139,26,26,.15);border-color:rgba(248,113,113,.3);}
+.cmp-badge{font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;margin-bottom:6px;display:inline-block;}
+.cb-18{background:rgba(34,197,94,.2);color:var(--green);}
+.cb-24{background:rgba(248,113,113,.2);color:#f87171;}
+.cmp-hc{font-size:18px;font-weight:700;color:var(--text);font-family:'DM Mono',monospace;margin:3px 0;}
+.cmp-row{display:flex;justify-content:space-between;font-size:10px;padding:2px 0;}
+.cmp-lbl{color:var(--text3);}
+.cmp-v18{color:var(--green);font-weight:600;font-family:'DM Mono',monospace;}
+.cmp-v24{color:#f87171;font-weight:600;font-family:'DM Mono',monospace;}
+
+/* ── CLOSING ── */
+.closing-hero{
+  background:linear-gradient(135deg,#0a1f0e,#0f2a14);
+  border:1px solid rgba(34,197,94,.25);border-radius:var(--r);
+  padding:12px 14px;margin-bottom:8px;
+}
+.ch-label{font-size:9px;color:rgba(255,255,255,.4);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px;}
+.ch-val{font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--green);line-height:1;letter-spacing:1px;}
+.ch-sub{font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,.3);margin-top:2px;}
+
+.step-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
+.step-row:last-child{border-bottom:none;}
+.step-num{
+  width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;flex-shrink:0;
+}
+.sn1{background:rgba(59,130,246,.2);color:var(--blue);}
+.sn2{background:rgba(168,85,247,.2);color:#c084fc;}
+.sn3{background:rgba(212,160,23,.2);color:var(--gold2);}
+.step-lbl{font-size:11px;color:var(--text2);}
+.step-formula{font-size:9px;color:var(--text3);margin-top:1px;}
+.step-v{font-size:13px;font-weight:700;color:var(--text);font-family:'DM Mono',monospace;text-align:right;}
+.step-vsub{font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;text-align:right;}
+
+.summary-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);}
+.summary-row:last-child{border-bottom:none;}
+.slbl{font-size:11px;color:var(--text2);}
+.sval{font-size:12px;font-weight:600;font-family:'DM Mono',monospace;}
+.sv-green{color:var(--green);}
+.sv-gold{color:var(--gold2);}
+
+/* ── QREF ── */
+.qref-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);}
+.qref-row:last-child{border-bottom:none;}
+.qref-d{font-size:10px;color:var(--text2);width:52px;flex-shrink:0;}
+.qref-bar{flex:1;height:3px;background:var(--bg4);border-radius:2px;overflow:hidden;}
+.qref-fill{height:100%;background:var(--blue);border-radius:2px;}
+.qref-v{font-size:10px;font-weight:600;color:var(--text);font-family:'DM Mono',monospace;text-align:right;width:60px;}
+.qref-tot{font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;width:68px;text-align:right;}
+
+/* ── CUST INPUTS ── */
+.ci-field{margin-bottom:7px;}
+.ci-lbl{font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px;}
+.ci-inp{
+  width:100%;height:32px;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;
+  color:var(--text);font-size:12px;padding:0 10px;outline:none;font-family:'DM Sans',sans-serif;
+}
+.ci-inp:focus{border-color:var(--gold);}
+.ci-inp::placeholder{color:var(--text3);}
+.ci-row{display:flex;gap:6px;}
+.ci-row .ci-inp{flex:1;}
+.auto-btn{
+  padding:0 10px;height:32px;border-radius:6px;
+  background:rgba(212,160,23,.1);border:1px solid rgba(212,160,23,.3);
+  color:var(--gold2);font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;
+}
+.date-btn{
+  width:100%;height:32px;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;
+  color:var(--text);font-size:12px;padding:0 10px;display:flex;align-items:center;
+  justify-content:space-between;cursor:pointer;
+}
+.date-caret{color:var(--text3);font-size:9px;}
+
+/* ── ORNAMENTS ── */
+.orn-add{display:flex;gap:6px;margin-bottom:8px;}
+.orn-name-inp{
+  flex:1;height:28px;background:var(--bg4);border:1px solid var(--border2);border-radius:5px;
+  color:var(--text);font-size:11px;padding:0 8px;outline:none;
+}
+.orn-name-inp::placeholder{color:var(--text3);}
+.orn-wt-inp{
+  width:68px;height:28px;background:var(--bg3);border:1px solid var(--gold);border-radius:5px;
+  color:var(--text);font-size:11px;padding:0 6px;text-align:right;outline:none;
+  font-family:'DM Mono',monospace;
+}
+.orn-add-btn{
+  width:28px;height:28px;border-radius:5px;background:var(--gold);color:#1a1000;
+  font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;
+}
+.orn-item{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);font-size:11px;}
+.orn-item:last-child{border-bottom:none;}
+.orn-del{color:var(--text3);cursor:pointer;font-size:13px;padding:2px 4px;}
+.orn-total-row{display:flex;justify-content:space-between;padding:8px 0 0;border-top:1px solid var(--border2);font-size:12px;font-weight:700;margin-top:4px;}
+.orn-apply{
+  width:100%;height:28px;margin-top:6px;border-radius:5px;font-size:11px;font-weight:600;
+  background:rgba(212,160,23,.12);border:1px solid var(--gold);color:var(--gold2);cursor:pointer;
+}
+
+/* ── RENEW ── */
+.renew-result{
+  background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r2);
+  padding:10px 12px;margin-top:8px;
+}
+.renew-net{
+  display:flex;justify-content:space-between;align-items:center;
+  padding-top:8px;border-top:1px solid var(--border2);margin-top:6px;
+  font-size:13px;font-weight:700;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+/* ── SPARKLINE ── */
+#spark-canvas{width:100%;height:40px;border-radius:5px;background:var(--bg3);}
+
+/* ── SEPARATOR ── */
+.sep{height:1px;background:var(--border);margin:8px 0;}
+
+/* ── EXTRA BAR ── */
+.extra-row{
+  display:flex;justify-content:space-between;align-items:center;
+  background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r2);
+  padding:8px 10px;
+}
+.er-lbl{font-size:10px;color:var(--text3);}
+.er-val{font-size:12px;font-weight:700;color:var(--gold2);font-family:'DM Mono',monospace;}
+
+/* ── DAILY MINI ── */
+.daily-mini{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;}
+.mini{background:var(--bg4);border:1px solid var(--border);border-radius:var(--r2);padding:8px 10px;text-align:center;}
+.mini-lbl{font-size:9px;color:var(--text3);margin-bottom:3px;}
+.mini-val{font-size:14px;font-weight:700;color:var(--gold2);font-family:'DM Mono',monospace;}
+.mini-unit{font-size:9px;color:var(--text3);}
+
+/* Section header inside panel body */
+.sec-hdr{
+  font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--gold);padding:6px 0 5px;border-bottom:1px solid var(--border);
+  margin-bottom:8px;display:flex;align-items:center;gap:5px;
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo-box">💰</div>
+  <div>
+    <div class="brand">Fortune Capital</div>
+    <div class="brand-tag">Gold Loan Dashboard</div>
+  </div>
+
+  <div class="rate-ticker">
+    <div class="ticker-item"><div class="ticker-lbl">22K/g</div><div class="ticker-val" id="tb-22k">₹14,385</div></div>
+    <div class="ticker-item"><div class="ticker-lbl">18K/g</div><div class="ticker-val" id="tb-18k">₹11,880</div></div>
+    <div class="ticker-item"><div class="ticker-lbl">Pavan</div><div class="ticker-val" id="tb-pavan">₹1,15,080</div></div>
+    <div class="ticker-item"><div class="ticker-lbl">Silver/g</div><div class="ticker-val" id="tb-silver">₹280</div></div>
+    <div class="rate-status" id="rate-status">akgsma.com · loading…</div>
+    <button class="refresh-btn" onclick="fetchGoldRate()">↺ Refresh</button>
+  </div>
+</div>
+
+<!-- 4 PANELS -->
+<div class="panels">
+
+  <!-- ═══════════ PANEL 1: LOAN CALCULATOR ═══════════ -->
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title pt-gold"><span></span>Loan Calculator</div>
+      <div class="panel-sub">Gold value · processing · hand cash</div>
+    </div>
+    <div class="panel-body">
+
+      <!-- Hero -->
+      <div class="hero-val">
+        <div class="hero-label">Hand Cash Disbursed</div>
+        <div class="hero-num" id="p1-hc">₹0</div>
+        <div class="hero-sub" id="p1-hc-full">₹0.00</div>
+        <div class="yield-row">
+          <div class="yield-bar"><div class="yield-fill" id="yield-fill" style="width:99%"></div></div>
+          <div class="yield-pct" id="yield-pct">99% yield</div>
+        </div>
+      </div>
+
+      <!-- Inputs -->
+      <div class="card">
+        <div class="card-label">⚙ Inputs</div>
+        <div class="irow">
+          <div><div class="irow-lbl">Gold Weight</div></div>
+          <div class="irow-ctrl">
+            <div class="cbtn" onclick="adj('weight',-0.1)">−</div>
+            <input class="cinp" id="inp-weight" type="number" value="100" step="0.1" oninput="calc()">
+            <span class="cunit">g</span>
+            <div class="cbtn" onclick="adj('weight',0.1)">+</div>
+          </div>
+        </div>
+        <div class="irow">
+          <div><div class="irow-lbl">Gold Rate</div><div class="irow-sub">per gram</div></div>
+          <div class="irow-ctrl">
+            <div class="cbtn" onclick="adj('rate',-100)">−</div>
+            <input class="cinp" id="inp-rate" type="number" value="14385" step="100" oninput="calc()">
+            <span class="cunit">₹</span>
+            <div class="cbtn" onclick="adj('rate',100)">+</div>
+          </div>
+        </div>
+        <div class="irow">
+          <div><div class="irow-lbl">Interest Rate</div></div>
+          <div class="irow-ctrl">
+            <div class="cbtn" onclick="adj('interest',-1)">−</div>
+            <input class="cinp" id="inp-interest" type="number" value="18" step="1" oninput="calc()">
+            <span class="cunit">%</span>
+            <div class="cbtn" onclick="adj('interest',1)">+</div>
+          </div>
+        </div>
+        <div class="irow">
+          <div><div class="irow-lbl">Processing</div></div>
+          <div class="irow-ctrl">
+            <div class="cbtn" onclick="adj('proc',-0.125)">−</div>
+            <input class="cinp" id="inp-proc" type="number" value="0.750" step="0.125" oninput="calc()">
+            <span class="cunit">%</span>
+            <div class="cbtn" onclick="adj('proc',0.125)">+</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Breakdown Bars -->
+      <div class="card">
+        <div class="card-label">📊 Breakdown</div>
+        <div class="bar-row">
+          <div class="bar-header">
+            <span class="bar-name">Gold Value</span>
+            <span><span class="bar-val" id="bar-gold-val">₹0</span> <span class="bar-badge bg-gold">100%</span></span>
+          </div>
+          <div class="track"><div class="fill f-gold" style="width:100%"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-header">
+            <span class="bar-name">Processing</span>
+            <span><span class="bar-val" id="bar-proc-val">₹0</span> <span class="bar-badge bg-red" id="badge-proc">0.75%</span></span>
+          </div>
+          <div class="track"><div class="fill f-red" id="bar-proc-fill" style="width:0.75%"></div></div>
+        </div>
+        <div class="bar-row" style="margin-bottom:0">
+          <div class="bar-header">
+            <span class="bar-name">Hand Cash</span>
+            <span><span class="bar-val" id="bar-hc-val">₹0</span> <span class="bar-badge bg-green" id="badge-hc">99%</span></span>
+          </div>
+          <div class="track"><div class="fill f-green" id="bar-hc-fill" style="width:99%"></div></div>
+        </div>
+      </div>
+
+      <!-- Metrics -->
+      <div class="metrics2">
+        <div class="metric"><div class="metric-lbl">Yearly Interest</div><div class="metric-val" id="m-yr">₹0</div><div class="metric-sub" id="m-yr-sub">₹0.00</div></div>
+        <div class="metric"><div class="metric-lbl">Monthly Interest</div><div class="metric-val" id="m-mo">₹0</div><div class="metric-sub" id="m-mo-sub">₹0.00</div></div>
+        <div class="metric"><div class="metric-lbl">Daily Interest</div><div class="metric-val" id="m-day">₹0</div><div class="metric-sub" id="m-day-sub">₹0.00</div></div>
+        <div class="metric"><div class="metric-lbl">Processing Fee</div><div class="metric-val" id="m-proc">₹0</div><div class="metric-sub" id="m-proc-sub">₹0.00</div></div>
+      </div>
+
+      <!-- Ornaments -->
+      <div class="card">
+        <div class="card-label">💍 Ornaments Weight</div>
+        <div class="orn-add">
+          <input class="orn-name-inp" id="orn-name" placeholder="Name (opt)" type="text">
+          <input class="orn-wt-inp" id="orn-wt" type="number" value="0" step="0.0001" min="0">
+          <span class="cunit" style="align-self:center">g</span>
+          <button class="orn-add-btn" onclick="addOrn()">+</button>
+        </div>
+        <div id="orn-list"></div>
+        <div id="orn-footer" style="display:none">
+          <div class="orn-total-row">
+            <span>Total</span>
+            <span id="orn-total" style="color:var(--gold2);font-family:'DM Mono',monospace">0 g</span>
+          </div>
+          <button class="orn-apply" onclick="applyOrn()">⬆ Apply to Gold Weight</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════ PANEL 2: RATE COMPARISON ═══════════ -->
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title pt-blue"><span></span>Rate Comparison</div>
+      <div class="panel-sub">18% vs 24% · multi-rate · gold renew</div>
+    </div>
+    <div class="panel-body">
+
+      <!-- 18 vs 24 -->
+      <div class="sec-hdr">📊 18% vs 24% Interest</div>
+      <div class="cmp-grid">
+        <div class="cmp-card cmp-18">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span class="cmp-badge cb-18">18% / YR</span>
+            <span id="cmp18-pct" style="font-size:10px;color:var(--green);font-weight:700">99%</span>
+          </div>
+          <div class="cmp-hc" id="cmp18-hc">₹0</div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:6px">hand cash</div>
+          <div class="cmp-row"><span class="cmp-lbl">Monthly</span><span class="cmp-v18" id="cmp18-mo">₹0</span></div>
+          <div class="cmp-row"><span class="cmp-lbl">Daily</span><span class="cmp-v18" id="cmp18-day">₹0</span></div>
+          <div class="cmp-row"><span class="cmp-lbl">Yearly</span><span class="cmp-v18" id="cmp18-yr">₹0</span></div>
+        </div>
+        <div class="cmp-card cmp-24">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span class="cmp-badge cb-24">24% / YR</span>
+            <span id="cmp24-pct" style="font-size:10px;color:#f87171;font-weight:700">99%</span>
+          </div>
+          <div class="cmp-hc" id="cmp24-hc">₹0</div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:6px">hand cash</div>
+          <div class="cmp-row"><span class="cmp-lbl">Monthly</span><span class="cmp-v24" id="cmp24-mo">₹0</span></div>
+          <div class="cmp-row"><span class="cmp-lbl">Daily</span><span class="cmp-v24" id="cmp24-day">₹0</span></div>
+          <div class="cmp-row"><span class="cmp-lbl">Yearly</span><span class="cmp-v24" id="cmp24-yr">₹0</span></div>
+        </div>
+      </div>
+      <div class="extra-row" style="margin-bottom:10px">
+        <span class="er-lbl">Extra monthly interest at 24%</span>
+        <span class="er-val" id="extra-mo">+₹0</span>
+      </div>
+
+      <!-- Multi-Rate -->
+      <div class="sec-hdr">⚖ Multi-Rate Table</div>
+      <div id="multi-rate-table"></div>
+
+      <!-- Gold Renew -->
+      <div class="sec-hdr" style="margin-top:8px">🔄 Gold Renew</div>
+      <div class="card" style="padding:10px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div>
+            <div class="irow-sub" style="margin-bottom:3px;">Existing Loan (₹)</div>
+            <input class="cinp" id="renew-loan" type="number" value="190300" style="width:100%" oninput="calcRenew()">
+          </div>
+          <div>
+            <div class="irow-sub" style="margin-bottom:3px;">Rate (%)</div>
+            <div class="irow-ctrl">
+              <div class="cbtn" onclick="adjR('rate',-1)">−</div>
+              <input class="cinp" id="renew-rate" type="number" value="24" style="width:50px" oninput="calcRenew()">
+              <div class="cbtn" onclick="adjR('rate',1)">+</div>
+            </div>
+          </div>
+          <div>
+            <div class="irow-sub" style="margin-bottom:3px;">Days</div>
+            <div class="irow-ctrl">
+              <div class="cbtn" onclick="adjR('days',-1)">−</div>
+              <input class="cinp" id="renew-days" type="number" value="31" style="width:50px" oninput="calcRenew()">
+              <div class="cbtn" onclick="adjR('days',1)">+</div>
+            </div>
+          </div>
+          <div>
+            <div class="irow-sub" style="margin-bottom:3px;">New Weight (g)</div>
+            <input class="cinp" id="renew-wt" type="number" value="17.32" step="0.01" style="width:100%" oninput="calcRenew()">
+          </div>
+          <div>
+            <div class="irow-sub" style="margin-bottom:3px;">Gold Rate (₹)</div>
+            <input class="cinp" id="renew-grate" type="number" value="14385" style="width:100%" oninput="calcRenew()">
+          </div>
+          <div>
+            <div class="irow-sub" style="margin-bottom:3px;">Proc (%)</div>
+            <input class="cinp" id="renew-proc" type="number" value="0.6" step="0.1" style="width:100%" oninput="calcRenew()">
+          </div>
+        </div>
+        <div class="renew-result" id="renew-result"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════ PANEL 3: CLOSING CALCULATOR ═══════════ -->
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title pt-green"><span></span>Closing Calculator</div>
+      <div class="panel-sub">Interest · days · total closing amount</div>
+    </div>
+    <div class="panel-body">
+
+      <!-- Customer -->
+      <div class="card">
+        <div class="card-label">👤 Customer Details</div>
+        <div class="ci-field">
+          <div class="ci-lbl">Customer Name</div>
+          <input class="ci-inp" id="cl-name" type="text" placeholder="e.g. Ravi Kumar">
+        </div>
+        <div class="ci-field">
+          <div class="ci-lbl">Loan ID / GLO</div>
+          <div class="ci-row">
+            <input class="ci-inp" id="cl-glo" type="text" placeholder="e.g. GLO-431">
+            <button class="auto-btn" onclick="autoGLO()">Auto ✦</button>
+          </div>
+        </div>
+        <div class="ci-field">
+          <div class="ci-lbl">Loan Date</div>
+          <button class="date-btn" onclick="document.getElementById('cl-date-hidden').click()">
+            <span id="cl-date-display">Select Date</span>
+            <span class="date-caret">▼</span>
+          </button>
+          <input type="date" id="cl-date-hidden" style="display:none" onchange="onDateChange()">
+        </div>
+      </div>
+
+      <!-- Closing Inputs -->
+      <div class="card">
+        <div class="card-label">🧾 Loan Details</div>
+        <div class="irow">
+          <div><div class="irow-lbl">Loan Amount</div></div>
+          <div class="irow-ctrl">
+            <input class="cinp" id="cl-amount" type="number" value="445000" style="width:100px" oninput="calcClosing()">
+            <span class="cunit">₹</span>
+          </div>
+        </div>
+        <div class="irow">
+          <div><div class="irow-lbl">Annual Rate</div></div>
+          <div class="irow-ctrl">
+            <div class="cbtn" onclick="adjCl('rate',-1)">−</div>
+            <input class="cinp" id="cl-rate" type="number" value="24" oninput="calcClosing()">
+            <span class="cunit">%</span>
+            <div class="cbtn" onclick="adjCl('rate',1)">+</div>
+          </div>
+        </div>
+        <div class="irow">
+          <div><div class="irow-lbl">Days Outstanding</div></div>
+          <div class="irow-ctrl">
+            <div class="cbtn" onclick="adjCl('days',-1)">−</div>
+            <input class="cinp" id="cl-days" type="number" value="166" oninput="calcClosing()">
+            <span class="cunit">days</span>
+            <div class="cbtn" onclick="adjCl('days',1)">+</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Closing Hero -->
+      <div id="closing-hero-wrap"></div>
+
+      <!-- Steps -->
+      <div class="card">
+        <div class="card-label">🔢 Calculation Steps</div>
+        <div id="calc-steps"></div>
+      </div>
+
+      <!-- Summary -->
+      <div class="card">
+        <div class="card-label">💰 Summary</div>
+        <div id="closing-summary"></div>
+        <div class="daily-mini">
+          <div class="mini"><div class="mini-lbl">Daily Interest</div><div class="mini-val" id="cl-daily">₹0</div><div class="mini-unit">/day</div></div>
+          <div class="mini"><div class="mini-lbl">Monthly Interest</div><div class="mini-val" id="cl-monthly">₹0</div><div class="mini-unit">/mo</div></div>
+        </div>
+      </div>
+
+      <!-- Export -->
+      <div style="display:flex;gap:6px;margin-top:4px;">
+        <button onclick="exportTxt()" style="flex:1;height:32px;border-radius:6px;font-size:11px;font-weight:600;background:rgba(212,160,23,.1);border:1px solid rgba(212,160,23,.3);color:var(--gold2);cursor:pointer;">📄 Export .txt</button>
+        <button onclick="resetClosing()" style="flex:1;height:32px;border-radius:6px;font-size:11px;font-weight:600;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);cursor:pointer;">↺ Reset</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════ PANEL 4: INSIGHTS & QUICK REF ═══════════ -->
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title pt-red"><span></span>Insights & Quick Ref</div>
+      <div class="panel-sub">Accrual · rates · sparkline · reference</div>
+    </div>
+    <div class="panel-body">
+
+      <!-- Live Gold Rate Card -->
+      <div class="sec-hdr">🏅 Kerala Gold Rate (akgsma.com)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
+        <div class="metric" onclick="setRate(22)" style="cursor:pointer" id="karat-22">
+          <div class="metric-lbl">22K / gram</div>
+          <div class="metric-val" id="r22k">₹14,385</div>
+          <div class="metric-sub">click to apply</div>
+        </div>
+        <div class="metric" onclick="setRate(18)" style="cursor:pointer" id="karat-18">
+          <div class="metric-lbl">18K / gram</div>
+          <div class="metric-val" id="r18k">₹11,880</div>
+          <div class="metric-sub">click to apply</div>
+        </div>
+        <div class="metric">
+          <div class="metric-lbl">Pavan (8g)</div>
+          <div class="metric-val" id="r-pavan">₹1,15,080</div>
+          <div class="metric-sub" id="r-date" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
+        </div>
+        <div class="metric">
+          <div class="metric-lbl">Silver / gram</div>
+          <div class="metric-val" id="r-silver">₹280</div>
+          <div class="metric-sub" id="r-change" style="color:var(--green)">—</div>
+        </div>
+      </div>
+      <div style="margin-bottom:8px;">
+        <canvas id="spark-canvas" height="40"></canvas>
+        <div style="display:flex;justify-content:space-between;margin-top:2px;">
+          <span style="font-size:9px;color:var(--text3)">📊 22K Today</span>
+          <span id="spark-range" style="font-size:9px;color:var(--gold2);font-family:'DM Mono',monospace;">—</span>
+        </div>
+      </div>
+
+      <!-- Portfolio Insights -->
+      <div class="sec-hdr">📈 Portfolio Snapshot</div>
+      <div class="metrics2" style="margin-bottom:8px;">
+        <div class="metric"><div class="metric-lbl">Interest Rate</div><div class="metric-val" id="ins-rate">18%</div></div>
+        <div class="metric"><div class="metric-lbl">Processing</div><div class="metric-val" id="ins-proc">0.75%</div></div>
+        <div class="metric"><div class="metric-lbl">Daily Earn</div><div class="metric-val" id="ins-daily">₹0</div></div>
+        <div class="metric"><div class="metric-lbl">Yield</div><div class="metric-val" id="ins-yield">99%</div></div>
+      </div>
+
+      <!-- Quick Ref Accrual Table -->
+      <div class="sec-hdr">📅 Closing Quick Reference</div>
+      <div style="font-size:9px;color:var(--text3);margin-bottom:6px;" id="qref-sub">Based on current settings</div>
+      <div id="qref-rows"></div>
+
+    </div>
+  </div>
+
+</div><!-- /panels -->
+</div><!-- /shell -->
+
+<script>
+// ── HELPERS ──────────────────────────────────────────────
+function fmt(n){
+  if(n>=10000000)return'₹'+(n/10000000).toFixed(2)+'Cr';
+  if(n>=100000)  return'₹'+(n/100000).toFixed(2)+'L';
+  if(n>=1000)    return'₹'+(n/1000).toFixed(1)+'K';
+  return'₹'+n.toFixed(2);
+}
+function fmtFull(n){return'₹'+n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function fmtM(n){return'₹'+n.toFixed(4);}
+
+// ── GOLD RATES ───────────────────────────────────────────
+let rates={k22:14385,k18:11880,silver:280,pavan:114960};
+let rateHistory=[];
+
+const CORS_PROXIES=[
+  u=>`https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
+  u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,
+  u=>`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+];
+const AKGSMA_URL='https://akgsma.com/';
+
+function parseAkgsmaHTML(html){
+  const c=html.replace(/&#8377;/g,'₹').replace(/&nbsp;/g,' ').replace(/\r?\n/g,' ').replace(/\s{2,}/g,' ');
+  const r22 =c.match(/22K\w*\s*\(1gm\)\s*[-–]\s*(?:₹|Rs\.?)\s*([\d,]+)/i);
+  const r18 =c.match(/18K\w*\s*\(1gm\)\s*[-–]\s*(?:₹|Rs\.?)\s*([\d,]+)/i);
+  const rSilv=c.match(/^Silver\s*\(1gm\)\s*[-–]\s*(?:₹|Rs\.?)\s*([\d,]+)/im);
+  const rDate=c.match(/Today[''']?s\s+Rate\s*\(\s*([0-9\/\-]+)\s*\)/i);
+  return{k22:r22?parseInt(r22[1].replace(/,/g,'')):0,k18:r18?parseInt(r18[1].replace(/,/g,'')):0,silver:rSilv?parseInt(rSilv[1].replace(/,/g,'')):0,date:rDate?rDate[1].trim():''};
+}
+
+async function fetchGoldRate(){
+  document.getElementById('rate-status').textContent='fetching…';
+  let parsed={k22:0,k18:0,silver:0,date:''};
+  for(const fn of CORS_PROXIES){
+    try{
+      const resp=await fetch(fn(AKGSMA_URL),{signal:AbortSignal.timeout(8000)});
+      if(!resp.ok)continue;
+      const ct=resp.headers.get('content-type')||'';
+      let raw=ct.includes('json')?(await resp.json()).contents||'':await resp.text();
+      if(raw.length>500&&/akgsma/i.test(raw)){
+        parsed=parseAkgsmaHTML(raw);
+        if(parsed.k22>5000&&parsed.k22<40000)break;
+      }
+    }catch(e){}
+  }
+  const now=new Date();
+  if(parsed.k22>5000&&parsed.k22<40000){
+    const prev=rates.k22;
+    rates.k22=parsed.k22;
+    rates.k18=parsed.k18||Math.round(parsed.k22*18/22);
+    rates.silver=parsed.silver||0;
+    rates.pavan=parsed.k22*8;
+    rateHistory.push({t:now,v:rates.k22});
+    if(rateHistory.length>10)rateHistory.shift();
+    const diff=rates.k22-prev;
+    const sign=diff>0?'▲':diff<0?'▼':'●';
+    const color=diff>0?'var(--green)':diff<0?'#f87171':'var(--text3)';
+    document.getElementById('r-change').style.color=color;
+    document.getElementById('r-change').textContent=sign+' ₹'+Math.abs(diff);
+    document.getElementById('rate-status').textContent=
+      (parsed.date?parsed.date+' · ':'')+now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})+' IST';
+  } else {
+    document.getElementById('rate-status').textContent='offline · using cached';
+    document.getElementById('r-change').style.color='#f87171';
+    document.getElementById('r-change').textContent='⚠ offline';
+  }
+  updateRateUI();
+  drawSparkline();
+  calc();
+}
+
+function updateRateUI(){
+  document.getElementById('tb-22k').textContent='₹'+rates.k22.toLocaleString('en-IN');
+  document.getElementById('tb-18k').textContent='₹'+rates.k18.toLocaleString('en-IN');
+  document.getElementById('tb-pavan').textContent='₹'+rates.pavan.toLocaleString('en-IN');
+  document.getElementById('tb-silver').textContent='₹'+(rates.silver||0);
+  document.getElementById('r22k').textContent='₹'+rates.k22.toLocaleString('en-IN');
+  document.getElementById('r18k').textContent='₹'+rates.k18.toLocaleString('en-IN');
+  document.getElementById('r-pavan').textContent='₹'+rates.pavan.toLocaleString('en-IN');
+  document.getElementById('r-silver').textContent='₹'+(rates.silver||0);
+}
+
+function setRate(k){
+  const v=k===22?rates.k22:rates.k18;
+  document.getElementById('inp-rate').value=v;
+  document.getElementById('renew-grate').value=v;
+  // Highlight active
+  ['karat-22','karat-18'].forEach(id=>document.getElementById(id).style.borderColor='var(--border)');
+  document.getElementById(k===22?'karat-22':'karat-18').style.borderColor='var(--gold)';
+  calc();calcRenew();
+}
+
+function drawSparkline(){
+  const canvas=document.getElementById('spark-canvas');
+  if(!canvas)return;
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.offsetWidth||280,H=40;
+  canvas.width=W*dpr;canvas.height=H*dpr;
+  const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='rgba(24,24,27,0.6)';ctx.fillRect(0,0,W,H);
+  if(rateHistory.length<2){
+    ctx.fillStyle='rgba(212,160,23,0.4)';ctx.font='10px DM Sans';ctx.textAlign='center';
+    ctx.fillText('₹'+rates.k22.toLocaleString('en-IN')+' · updates on each fetch',W/2,H/2+4);
+    document.getElementById('spark-range').textContent='₹'+rates.k22.toLocaleString('en-IN');
+    return;
+  }
+  const vals=rateHistory.map(r=>r.v);
+  const minV=Math.min(...vals),maxV=Math.max(...vals),range=maxV-minV||200;
+  const pad=6,pw=W-pad*2,ph=H-pad*2-8;
+  const pts=vals.map((v,i)=>({x:pad+i*(pw/(vals.length-1)),y:pad+ph*(1-(v-minV)/range)}));
+  const g=ctx.createLinearGradient(0,pad,0,H-pad);
+  g.addColorStop(0,'rgba(212,160,23,0.25)');g.addColorStop(1,'rgba(212,160,23,0.01)');
+  ctx.beginPath();ctx.moveTo(pts[0].x,H-pad-8);pts.forEach(p=>ctx.lineTo(p.x,p.y));
+  ctx.lineTo(pts[pts.length-1].x,H-pad-8);ctx.closePath();ctx.fillStyle=g;ctx.fill();
+  ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));
+  ctx.strokeStyle='#D4A017';ctx.lineWidth=1.5;ctx.lineJoin='round';ctx.stroke();
+  pts.forEach((p,i)=>{ctx.beginPath();ctx.arc(p.x,p.y,2,0,Math.PI*2);ctx.fillStyle=i===pts.length-1?'#f0b429':'rgba(212,160,23,0.6)';ctx.fill();});
+  document.getElementById('spark-range').textContent='₹'+minV.toLocaleString('en-IN')+' – ₹'+maxV.toLocaleString('en-IN');
+}
+
+// ── MAIN CALC ────────────────────────────────────────────
+function adj(field,delta){
+  const m={weight:'inp-weight',rate:'inp-rate',interest:'inp-interest',proc:'inp-proc'};
+  const el=document.getElementById(m[field]);
+  const d=field==='weight'?1:field==='proc'?3:0;
+  el.value=(parseFloat(el.value||0)+delta).toFixed(d);
+  calc();
+}
+function calc(){
+  const wt=parseFloat(document.getElementById('inp-weight').value)||0;
+  const rate=parseFloat(document.getElementById('inp-rate').value)||0;
+  const interest=parseFloat(document.getElementById('inp-interest').value)||18;
+  const proc=parseFloat(document.getElementById('inp-proc').value)||0.75;
+  const gv=wt*rate,pa=gv*(proc/100),hc=gv-pa;
+  const yr=gv*(interest/100),mo=yr/12,day=yr/365;
+  const hcPct=gv>0?hc/gv*100:99,yPct=Math.round(hcPct),pPct=proc;
+
+  document.getElementById('p1-hc').textContent=fmt(hc);
+  document.getElementById('p1-hc-full').textContent=fmtFull(hc);
+  document.getElementById('yield-fill').style.width=yPct+'%';
+  document.getElementById('yield-pct').textContent=yPct+'% yield';
+
+  document.getElementById('bar-gold-val').textContent=fmt(gv);
+  document.getElementById('bar-proc-val').textContent=fmt(pa);
+  document.getElementById('bar-hc-val').textContent=fmt(hc);
+  document.getElementById('bar-proc-fill').style.width=pPct+'%';
+  document.getElementById('bar-hc-fill').style.width=hcPct.toFixed(1)+'%';
+  document.getElementById('badge-proc').textContent=pPct.toFixed(2)+'%';
+  document.getElementById('badge-hc').textContent=yPct+'%';
+
+  document.getElementById('m-yr').textContent=fmt(yr);document.getElementById('m-yr-sub').textContent=fmtFull(yr);
+  document.getElementById('m-mo').textContent=fmt(mo);document.getElementById('m-mo-sub').textContent=fmtFull(mo);
+  document.getElementById('m-day').textContent='₹'+day.toFixed(2);document.getElementById('m-day-sub').textContent='₹'+day.toFixed(4);
+  document.getElementById('m-proc').textContent=fmt(pa);document.getElementById('m-proc-sub').textContent=fmtFull(pa);
+
+  // 18 vs 24
+  const mo18=gv*0.18/12,day18=gv*0.18/365,yr18=gv*0.18;
+  const mo24=gv*0.24/12,day24=gv*0.24/365,yr24=gv*0.24;
+  document.getElementById('cmp18-hc').textContent=fmt(hc);
+  document.getElementById('cmp18-pct').textContent=yPct+'%';
+  document.getElementById('cmp18-mo').textContent=fmt(mo18);
+  document.getElementById('cmp18-day').textContent='₹'+day18.toFixed(2);
+  document.getElementById('cmp18-yr').textContent=fmt(yr18);
+  document.getElementById('cmp24-hc').textContent=fmt(hc);
+  document.getElementById('cmp24-pct').textContent=yPct+'%';
+  document.getElementById('cmp24-mo').textContent=fmt(mo24);
+  document.getElementById('cmp24-day').textContent='₹'+day24.toFixed(2);
+  document.getElementById('cmp24-yr').textContent=fmt(yr24);
+  document.getElementById('extra-mo').textContent='+'+fmt(mo24-mo18);
+
+  // Multi-rate
+  buildMultiRate(gv,proc);
+
+  // Insights
+  document.getElementById('ins-rate').textContent=interest+'%';
+  document.getElementById('ins-proc').textContent=proc+'%';
+  document.getElementById('ins-daily').textContent=fmt(day);
+  document.getElementById('ins-yield').textContent=yPct+'%';
+  buildQRef(gv,interest);
+}
+
+function buildMultiRate(gv,proc){
+  const rts=[18,20,22,24,26,28];
+  const pa=gv*(proc/100),hc=gv-pa;
+  document.getElementById('multi-rate-table').innerHTML=`
+    <table style="width:100%;border-collapse:collapse;font-size:10px;">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border);">
+          <th style="text-align:left;color:var(--text3);font-weight:600;padding:3px 4px;letter-spacing:.5px;">Rate</th>
+          <th style="text-align:right;color:var(--text3);font-weight:600;padding:3px 4px;">Monthly Int</th>
+          <th style="text-align:right;color:var(--text3);font-weight:600;padding:3px 4px;">Daily Int</th>
+          <th style="text-align:right;color:var(--text3);font-weight:600;padding:3px 4px;">Yearly Int</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rts.map(r=>`
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:4px;font-weight:700;color:${r<=18?'var(--green)':r<=22?'var(--gold2)':'#f87171'};">${r}%</td>
+            <td style="text-align:right;font-family:'DM Mono',monospace;color:var(--text);padding:4px;">${fmt(gv*r/100/12)}</td>
+            <td style="text-align:right;font-family:'DM Mono',monospace;color:var(--text3);padding:4px;">₹${(gv*r/100/365).toFixed(2)}</td>
+            <td style="text-align:right;font-family:'DM Mono',monospace;color:var(--text2);padding:4px;">${fmt(gv*r/100)}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+// ── ORNAMENTS ────────────────────────────────────────────
+let orns=[];
+function addOrn(){
+  const n=document.getElementById('orn-name').value||'Item '+(orns.length+1);
+  const w=parseFloat(document.getElementById('orn-wt').value)||0;
+  if(w<=0){return;}
+  orns.push({n,w});
+  document.getElementById('orn-name').value='';
+  document.getElementById('orn-wt').value='0';
+  renderOrns();
+}
+function removeOrn(i){orns.splice(i,1);renderOrns();}
+function renderOrns(){
+  const total=orns.reduce((s,o)=>s+o.w,0);
+  document.getElementById('orn-list').innerHTML=orns.map((o,i)=>`
+    <div class="orn-item">
+      <span style="color:var(--text2)">${o.n}</span>
+      <span style="display:flex;align-items:center;gap:6px">
+        <span style="color:var(--text);font-family:'DM Mono',monospace">${o.w.toFixed(4)}g</span>
+        <span class="orn-del" onclick="removeOrn(${i})">✕</span>
+      </span>
+    </div>`).join('');
+  const f=document.getElementById('orn-footer');
+  if(orns.length>0){
+    f.style.display='block';
+    document.getElementById('orn-total').textContent=total.toFixed(4)+' g';
+  } else f.style.display='none';
+}
+function applyOrn(){
+  const total=orns.reduce((s,o)=>s+o.w,0);
+  document.getElementById('inp-weight').value=total.toFixed(4);
+  calc();
+}
+
+// ── RENEW ─────────────────────────────────────────────────
+function adjR(f,d){
+  const m={rate:'renew-rate',days:'renew-days'};
+  const el=document.getElementById(m[f]);
+  el.value=Math.max(0,(parseFloat(el.value||0)+d));
+  calcRenew();
+}
+function calcRenew(){
+  const loan=parseFloat(document.getElementById('renew-loan').value)||0;
+  const rate=parseFloat(document.getElementById('renew-rate').value)||24;
+  const days=parseFloat(document.getElementById('renew-days').value)||31;
+  const wt=parseFloat(document.getElementById('renew-wt').value)||0;
+  const gr=parseFloat(document.getElementById('renew-grate').value)||0;
+  const proc=parseFloat(document.getElementById('renew-proc').value)||0.6;
+  const closInt=loan*(rate/100)/365*days;
+  const closTot=loan+closInt;
+  const nv=wt*gr,pa=nv*(proc/100),nl=nv-pa,net=nl-closTot;
+  const pos=net>=0;
+  document.getElementById('renew-result').innerHTML=`
+    <div class="summary-row"><span class="slbl">Closing Total</span><span class="sval" style="color:#f87171">${fmtFull(closTot)}</span></div>
+    <div class="summary-row"><span class="slbl">New Loan Amt</span><span class="sval sv-gold">${fmtFull(nl)}</span></div>
+    <div class="renew-net">
+      <span style="font-size:11px;color:var(--text2)">Net to Customer</span>
+      <span style="color:${pos?'var(--green)':'#f87171'};font-family:'DM Mono',monospace">${pos?'+':''}${fmtFull(net)}</span>
+    </div>`;
+}
+
+// ── CLOSING ───────────────────────────────────────────────
+let gloCounter=431;
+function autoGLO(){document.getElementById('cl-glo').value='GLO-'+(++gloCounter);}
+function adjCl(f,d){
+  const m={rate:'cl-rate',days:'cl-days'};
+  const el=document.getElementById(m[f]);
+  el.value=Math.max(0,(parseFloat(el.value||0)+d));
+  calcClosing();
+}
+function onDateChange(){
+  const val=document.getElementById('cl-date-hidden').value;
+  if(!val)return;
+  const d=new Date(val+'T00:00:00');
+  document.getElementById('cl-date-display').textContent=d.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+  const today=new Date();today.setHours(0,0,0,0);
+  const ld=new Date(val+'T00:00:00');ld.setHours(0,0,0,0);
+  const diff=Math.max(0,Math.round((today-ld)/(864e5)));
+  if(diff>0){document.getElementById('cl-days').value=diff;calcClosing();}
+}
+function calcClosing(){
+  const p=parseFloat(document.getElementById('cl-amount').value)||0;
+  const r=parseFloat(document.getElementById('cl-rate').value)||24;
+  const d=parseFloat(document.getElementById('cl-days').value)||166;
+  const ann=p*(r/100),day=ann/365,int=day*d,tot=p+int,mo=ann/12;
+  const ipct=tot>0?(int/tot*100):0,ppct=100-ipct;
+
+  document.getElementById('closing-hero-wrap').innerHTML=`
+    <div class="closing-hero">
+      <div class="ch-label">Total Closing Amount</div>
+      <div class="ch-val">${fmt(tot)}</div>
+      <div class="ch-sub">${fmtFull(tot)}</div>
+      <div style="display:flex;height:5px;border-radius:3px;overflow:hidden;margin-top:10px;gap:1px;">
+        <div style="width:${ppct.toFixed(1)}%;background:var(--green);border-radius:3px 0 0 3px;"></div>
+        <div style="width:${ipct.toFixed(1)}%;background:var(--gold2);border-radius:0 3px 3px 0;"></div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:5px;">
+        <span style="font-size:9px;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;background:var(--green);border-radius:50%;display:inline-block;"></span>Principal</span>
+        <span style="font-size:9px;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;background:var(--gold2);border-radius:50%;display:inline-block;"></span>${ipct.toFixed(0)}% interest</span>
+      </div>
+    </div>`;
+
+  document.getElementById('calc-steps').innerHTML=`
+    <div class="step-row">
+      <div class="step-num sn1">1</div>
+      <div style="flex:1"><div class="step-lbl">Annual Interest</div><div class="step-formula">${fmtFull(p)} × ${r}%</div></div>
+      <div><div class="step-v">${fmt(ann)}</div><div class="step-vsub">${fmtFull(ann)}</div></div>
+    </div>
+    <div class="step-row">
+      <div class="step-num sn2">2</div>
+      <div style="flex:1"><div class="step-lbl">Daily Interest</div><div class="step-formula">Annual ÷ 365</div></div>
+      <div><div class="step-v">₹${day.toFixed(2)}</div></div>
+    </div>
+    <div class="step-row">
+      <div class="step-num sn3">3</div>
+      <div style="flex:1"><div class="step-lbl">Closing Interest</div><div class="step-formula">₹${day.toFixed(2)} × ${d} days</div></div>
+      <div><div class="step-v">${fmt(int)}</div><div class="step-vsub">${fmtFull(int)}</div></div>
+    </div>`;
+
+  document.getElementById('closing-summary').innerHTML=`
+    <div class="summary-row"><span class="slbl">🏦 Principal</span><span class="sval sv-green">${fmtFull(p)}</span></div>
+    <div class="summary-row"><span class="slbl">📈 Interest (${d}d @ ${r}%)</span><span class="sval sv-gold">+${fmtFull(int)}</span></div>
+    <div style="height:1px;background:var(--border2);margin:4px 0;"></div>
+    <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;padding-top:4px;">
+      <span>Total</span><span style="color:var(--green);font-family:'DM Mono',monospace;">${fmtFull(tot)}</span>
+    </div>`;
+
+  document.getElementById('cl-daily').textContent='₹'+day.toFixed(2);
+  document.getElementById('cl-monthly').textContent='₹'+mo.toFixed(2);
+  buildQRef(p,r,true);
+}
+
+function buildQRef(principal,rate,isClosing=false){
+  const daily=principal*(rate/100)/365;
+  const maxInt=daily*365;
+  const periods=[30,60,90,120,150,180,365];
+  document.getElementById('qref-sub').textContent=`At ${rate}% on ${fmtFull(principal)}`;
+  document.getElementById('qref-rows').innerHTML=periods.map(d=>{
+    const i=daily*d,tot=principal+i,pct=maxInt>0?(i/maxInt*100):0;
+    return`<div class="qref-row">
+      <span class="qref-d">${d}d</span>
+      <div class="qref-bar"><div class="qref-fill" style="width:${pct.toFixed(1)}%"></div></div>
+      <span class="qref-v">${fmt(i)}</span>
+      <span class="qref-tot">${fmt(tot)}</span>
+    </div>`;
+  }).join('');
+}
+
+function exportTxt(){
+  const p=parseFloat(document.getElementById('cl-amount').value)||0;
+  const r=parseFloat(document.getElementById('cl-rate').value)||0;
+  const d=parseFloat(document.getElementById('cl-days').value)||0;
+  const name=document.getElementById('cl-name').value||'—';
+  const glo=document.getElementById('cl-glo').value||'—';
+  const date=document.getElementById('cl-date-display').textContent||'—';
+  const ann=p*(r/100),day=ann/365,int=day*d,tot=p+int;
+  const txt=`FORTUNE CAPITAL — CLOSING SUMMARY\n${'='.repeat(36)}\nCustomer: ${name}\nLoan ID: ${glo}\nLoan Date: ${date}\n${'─'.repeat(36)}\nPrincipal: ${fmtFull(p)}\nRate: ${r}% p.a.\nDays: ${d}\nAnnual Interest: ${fmtFull(ann)}\nDaily Interest: ₹${day.toFixed(2)}\nClosing Interest: ${fmtFull(int)}\nTOTAL CLOSING: ${fmtFull(tot)}\nGenerated: ${new Date().toLocaleString('en-IN')}`;
+  const a=document.createElement('a');a.href='data:text/plain,'+encodeURIComponent(txt);a.download='closing-summary.txt';a.click();
+}
+function resetClosing(){
+  document.getElementById('cl-amount').value=445000;
+  document.getElementById('cl-rate').value=24;
+  document.getElementById('cl-days').value=166;
+  document.getElementById('cl-name').value='';
+  document.getElementById('cl-glo').value='';
+  const today=new Date();
+  document.getElementById('cl-date-display').textContent=today.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('cl-date-hidden').value=today.toISOString().split('T')[0];
+  calcClosing();
+}
+
+// ── INIT ─────────────────────────────────────────────────
+(function init(){
+  updateRateUI();
+  drawSparkline();
+  const today=new Date();
+  document.getElementById('cl-date-display').textContent=today.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('cl-date-hidden').value=today.toISOString().split('T')[0];
+  calc();calcClosing();calcRenew();
+  fetchGoldRate();
+  window.addEventListener('resize',()=>drawSparkline());
+})();
+</script>
+</body>
+</html>
